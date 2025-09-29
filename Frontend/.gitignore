@@ -45,3 +45,4 @@ app-example
 
 # Ignore only test.jsx inside app/auth
 app/auth/test.jsx
+.env
