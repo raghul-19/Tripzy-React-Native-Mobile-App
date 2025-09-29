@@ -1,44 +1,53 @@
-{
-  "expo": {
-    "name": "Tripzy",
-    "slug": "tripzy",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "tripzy",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+  {
+    "expo": {
+      "name": "Tripzy",
+      "slug": "tripzy",
+      "version": "1.0.0",
+      "orientation": "portrait",
+      "icon": "./assets/images/icon.png",
+      "scheme": "tripzy",
+      "userInterfaceStyle": "automatic",
+      "newArchEnabled": true,
+      "ios": {
+        "supportsTablet": true
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.tripzy"
-    },
-    "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png",
-      "bundler": "metro"
-    },
-    "plugins": [
-      "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/splash.png",
-          "resizeMode": "contain",
-          "backgroundColor": "#2F80ED"
+      "androidNavigationBar": {
+        "backgroundColor": "#ffffff",
+        "barStyle": "dark-content" 
+      },
+      "splash": {
+        "image": "./assets/images/splash.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#2F80ED"
+      },
+      "android": {
+        "adaptiveIcon": {
+          "foregroundImage": "./assets/images/adaptive-icon.png",
+          "resizeMode": "cover",
+          "backgroundColor": "#ffffff"
+        },
+        "edgeToEdgeEnabled": true,
+        "predictiveBackGestureEnabled": false,
+        "package": "com.anonymous.tripzy"
+      },
+      "web": {
+        "output": "static",
+        "favicon": "./assets/images/favicon.png",
+        "bundler": "metro"
+      },
+     "plugins": [
+                "expo-router",
+                "./plugins/withAndroidTransparentSystemBars.js"
+              ],
+      "experiments": {
+        "typedRoutes": true,
+        "reactCompiler": true
+      },
+      "extra": {
+        "router": {},
+        "eas": {
+          "projectId": "b5f4ef60-c9fc-47de-8664-4520cc2914a1"
         }
-      ]
-    ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      }
     }
   }
-}
