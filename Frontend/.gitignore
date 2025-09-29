@@ -41,3 +41,7 @@ app-example
 # generated native folders
 /ios
 /android
+
+
+# Ignore only test.jsx inside app/auth
+app/auth/test.jsx

@@ -1,4 +1,4 @@
-        import { useRouter } from 'expo-router'
+import { useRouter } from 'expo-router'
 import { Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react-native'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Image, ImageBackground, Modal, Pressable, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native'
@@ -6,7 +6,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { scale, verticalScale } from 'react-native-size-matters'
     
-        const SignIn = () => {
+const SignIn = () => {
 
             const [focusField,setFocusField]=useState({
                 email:false,
