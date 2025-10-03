@@ -1,26 +1,113 @@
+import { useOAuth, useSignUp } from '@clerk/clerk-expo'
 import { useRouter } from 'expo-router'
-import { Eye, EyeOff,Lock,LockKeyhole, Mail, User } from 'lucide-react-native'
-import React, { useRef, useState } from 'react'
-import { ImageBackground, StatusBar, Text, View ,TouchableOpacity, TextInput, Pressable, Image, Modal} from 'react-native'
+import * as WebBrowser from 'expo-web-browser'
+import { Eye, EyeOff, LockKeyhole, Mail, ShieldAlert, User } from 'lucide-react-native'
+import React, { useEffect, useRef, useState } from 'react'
+import { Image, ImageBackground, Modal, Pressable, StatusBar, Text, TextInput, TouchableOpacity, View , ActivityIndicator} from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { scale, verticalScale } from 'react-native-size-matters'
+import { useWarmUpBrowser } from "../hooks/useWarmUpBrowser"
+import Verify from '../Fragments/verify';
+import * as Linking from 'expo-linking';
 
+
+WebBrowser.maybeCompleteAuthSession();
 
 const SignUp = () => {
-  
+
+  useWarmUpBrowser();
   const [focusField,setFocusField]=useState({
     name:false,
     email:false,
     password:false,
   });
-  const [otpFocus,setOtpFocus]=useState(false);
+  const {isLoaded,signUp,setActive}=useSignUp();
+  const {startOAuthFlow}=useOAuth({strategy:"oauth_google"});
   const [signupSuccess,setSignupSuccess]=useState(false);
   const [visible,setVisible]=useState(false);
   const nameRef=useRef(null);
   const emailRef=useRef(null);
   const passwordRef=useRef(null);
   const router=useRouter();
+  const [userDetails,setUserDetails]=useState({
+    name:"",
+    email:"",
+    password:"",
+  })
+  const [loading,setLoading]=useState({
+    signIn:false,
+    oAuth:false,
+  });
+  const [disabled,setDisabled]=useState(true);
+  const [error,setError]=useState("");
+  useEffect(() => {
+    if(userDetails.name.trim() && userDetails.email.trim() && userDetails.password.trim() && !loading.oAuth) {
+      setDisabled(false);     
+    } else {
+      setDisabled(true)
+    }
+  },[userDetails,loading])
+
+
+
+  const handleSignUp=async () => {
+    setLoading(prev => ({...prev,signIn:true}));
+    await new Promise(resolve => setTimeout(resolve,2000));
+    try {
+      if(!isLoaded) return;
+
+      await signUp.create({
+        emailAddress:userDetails.email,
+        password:userDetails.password,
+        firstName:userDetails.name,
+      
+      })
+      await signUp.prepareEmailAddressVerification({strategy:"email_code"})
+      setError("");
+      setSignupSuccess(true);
+
+    } catch(error) {
+      console.log(error.message);
+      if(error.errors && Array.isArray(error.errors)) {
+        error.errors.forEach((e) => setError(e.message));
+      } else {
+        setError("Network error");
+      }
+    }
+    setLoading(prev => ({...prev,signIn:false}));
+  }
+
+  const handleOtpVerification=async (code) => {
+    const otpVerification=await signUp.attemptEmailAddressVerification({code});
+    if(otpVerification.status==="complete") {
+      setActive({session:otpVerification.createdSessionId});
+    }
+  }
+
+  const handleResendOtp=async () => {
+    await signUp.prepareEmailAddressVerification({strategy:"email_code"});
+  }
+
+  const OauthSignIn=async () => {
+    setLoading(prev => ({...prev,oAuth:true}));
+    await new Promise(resolve => setTimeout(resolve,2000));
+    try {
+      const {createdSessionId,setActive}=await startOAuthFlow({redirectUrl:Linking.createURL('auth/sign-up')});
+      if(createdSessionId) {
+        await setActive({session:createdSessionId});
+      }
+      setError("");
+    } catch(error) {
+        if(error.errors[0]) {
+          setError(error.errors[0].message);
+        } else {
+          setError("Network error");
+        }
+    }
+    setLoading(prev => ({...prev,oAuth:false}));
+    
+  }
 
   return (
     <View style={{flex:1, backgroundColor:"#fff"}}>
@@ -50,6 +137,8 @@ const SignUp = () => {
                     placeholder='Enter name'
                     placeholderTextColor='gray'
                     className="text-md flex-1 font-semibold text-black outline-none"
+                    value={userDetails.name}
+                    onChangeText={(text) => setUserDetails(prev => ({...prev,name:text}))}
                   />
                 </TouchableOpacity>
                 <Text className="text-xl font-semibold mt-4">Email</Text>
@@ -62,6 +151,8 @@ const SignUp = () => {
                     placeholder='Enter email'
                     placeholderTextColor='gray'
                     className="text-md flex-1 font-semibold text-black outline-none"
+                    value={userDetails.email}
+                    onChangeText={(text) => setUserDetails(prev => ({...prev,email:text}))}
                   />
                 </TouchableOpacity>
                 <Text className="font-semibold text-xl mt-4">Password</Text>
@@ -74,21 +165,29 @@ const SignUp = () => {
                     placeholder='Enter password'
                     placeholderTextColor='gray'
                     className="text-md font-semibold text-black outline-none flex-1"
+                    value={userDetails.password}
+                    onChangeText={(text) => setUserDetails(prev => ({...prev,password:text}))}
                     secureTextEntry={!visible}
                   />
                   {visible?<Eye onPress={() => setVisible(!visible)} size={18} strokeWidth={2} strokeOpacity={0.5}/>:<EyeOff onPress={() => setVisible(!visible)} size={18} strokeWidth={2} strokeOpacity={0.5}/>}
                 </TouchableOpacity>
-                <Pressable  onPress={() => setSignupSuccess(true)} className="w-full active:opacity-80 bg-[#0286FF] mt-8 rounded-full flex items-center justify-center" style={{height:verticalScale(38)}}>
-                  <Text className="text-lg font-semibold text-white">Sign up</Text>
+                <Pressable disabled={disabled}  onPress={handleSignUp} className="w-full active:opacity-80 disabled:bg-blue-200 bg-[#0286FF] mt-8 rounded-full flex items-center justify-center" style={{height:verticalScale(38)}}>
+                  {loading.signIn ?<ActivityIndicator size="small" color='white'/>:<Text className="text-lg font-semibold text-white">Sign up</Text>}
                 </Pressable>
+                {error && 
+                  <View className="w-full bg-red-300/60 mt-5 overflow-scroll rounded-md gap-3 shadow-md flex flex-row items-center justify-start" style={{paddingHorizontal:scale(12), paddingVertical:verticalScale(9)}}>
+                    <ShieldAlert size={14} color={"red"}/>
+                    <Text numberOfLines={1}  className="flex-1 text-sm text-red-500 font-semibold">{error}</Text>
+                  </View>
+                }
                 <View className="mt-6 flex w-full flex-row gap-3 items-center">
                   <View className="flex-1 w-full border border-gray-200"></View>
                   <Text className="font-semibold text-xl tracking-wide">Or</Text>
                   <View className="w-full flex-1 border border-gray-200"></View>
                 </View>
-                <Pressable className="mt-5 w-full border border-gray-200 opacity-80 flex flex-row rounded-full items-center justify-center gap-3" style={{paddingHorizontal:scale(7), paddingVertical:verticalScale(14)}}>
-                  <Image source={require("../../assets/images/search.png")} className="w-6 h-6"/>
-                  <Text className="font-semibold text-lg">Log In with Google</Text>
+                <Pressable onPress={OauthSignIn}  className="mt-5 w-full border border-gray-200 opacity-80 flex flex-row rounded-full items-center justify-center gap-3" style={{paddingHorizontal:scale(7), paddingVertical:verticalScale(14)}}>
+                  <Image  source={require("../../assets/images/search.png")} className="w-6 h-6"/>
+                  {loading.oAuth?<ActivityIndicator size="small" color='black'/>:<Text className="font-semibold text-lg">Log In with Google</Text>}
                 </Pressable>
                 <View className="flex flex-row gap-1 w-full justify-center items-center mt-8">
                   <Text className="text-xl font-medium text-gray-500 tracking-wide">Already have an account?</Text>
@@ -100,23 +199,7 @@ const SignUp = () => {
         
       </SafeAreaView>
 
-      <Modal onRequestClose={() => setSignupSuccess(false)} visible={signupSuccess} animationType='slide' transparent={true}>
-        <View className="flex-1 justify-center items-center bg-black/40 p-4">
-            <View className="w-full rounded-xl flex items-start bg-white px-6 py-8">
-              <Text className="font-bold text-2xl">Verification</Text>
-              <Text className="font-medium text-md mt-3">{"We've sent a verification code to"}</Text>
-              <Text className="font-medium text-sm">{"raghul19april@gmail.com"}</Text>
-              <Text className="mt-6 font-semibold text-xl">Code</Text>
-              <View className={`mt-3 flex flex-row items-center gap-3 w-full border-2 ${otpFocus?"border-blue-500":"border-transparent"} bg-neutral-200/50 rounded-full`} style={{paddingHorizontal:scale(12), paddingVertical:verticalScale(6)}}>
-                <LockKeyhole size={18} strokeOpacity={0.5} strokeWidth={2}/>
-                <TextInput onFocus={() => setOtpFocus(true)} onBlur={() => setOtpFocus(false)} className="text-lg font-medium flex-1"/>
-              </View>
-              <Pressable onPress={() => router.push("/auth/sign-in")} className="mt-8 w-full bg-green-600 rounded-full flex active:opacity-65 items-center justify-center" style={{paddingVertical:verticalScale(13)}}>
-                <Text className="text-lg tracking-wide text-white font-semibold">Verify Email</Text>
-              </Pressable>
-            </View>
-        </View>
-      </Modal>
+      {signupSuccess && <Verify visible={signupSuccess} onClose={setSignupSuccess} handleOtpVerification={handleOtpVerification} handleResendOtp={handleResendOtp} isSignIn={false}/>}
 
     </View>
   )
