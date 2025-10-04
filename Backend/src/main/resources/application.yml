@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: uber-clone
+  datasource:
+    url: "jdbc:postgresql://ep-steep-mountain-aevyair7-pooler.c-2.us-east-2.aws.neon.tech:5432/uber-clone?sslmode=require&channel_binding=require"
+    username: neondb_owner
+    password: npg_0MYrI2niOFqK
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true

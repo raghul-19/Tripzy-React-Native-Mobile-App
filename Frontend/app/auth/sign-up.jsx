@@ -96,6 +96,7 @@ const SignUp = () => {
       const {createdSessionId,setActive}=await startOAuthFlow({redirectUrl:Linking.createURL('auth/sign-up')});
       if(createdSessionId) {
         await setActive({session:createdSessionId});
+        
       }
       setError("");
     } catch(error) {
