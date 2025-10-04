@@ -2,9 +2,9 @@ spring:
   application:
     name: uber-clone
   datasource:
-    url: "jdbc:postgresql://ep-steep-mountain-aevyair7-pooler.c-2.us-east-2.aws.neon.tech:5432/uber-clone?sslmode=require&channel_binding=require"
-    username: neondb_owner
-    password: npg_0MYrI2niOFqK
+    url: ${neo_db_url}
+    username: ${neo_user_name}
+    password: ${neo_user_password}
     driver-class-name: org.postgresql.Driver
 
   jpa:
