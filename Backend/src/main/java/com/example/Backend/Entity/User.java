@@ -26,7 +26,8 @@ public class User {
     private boolean status;
     private String pNumber;
 
-    @Lob
     @Column(columnDefinition = "BYTEA")
     private byte[] imageBytes;
+
+    private String imageType;
 }
