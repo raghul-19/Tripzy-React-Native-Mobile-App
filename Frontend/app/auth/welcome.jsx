@@ -1,5 +1,5 @@
   import React, { useEffect, useRef, useState } from 'react'
-  import { Dimensions, Image, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native'
+  import { Image, Pressable, Text, View } from 'react-native'
   import { SafeAreaView } from 'react-native-safe-area-context'
   import Swiper from 'react-native-swiper'
   import { welcomPageDataSet } from '../dataSet'
@@ -22,7 +22,7 @@ import { useRouter } from 'expo-router'
           <View className="flex-1  bg-white">
             <View className="flex-1">
               <View  className="w-full flex flex-row justify-end mt-3 p-5">
-                <Text onPress={() => router.push("/auth/start")} className="text-md font-semibold">Skip</Text>
+                <Text onPress={() => router.replace("/auth/start")} className="text-md font-semibold">Skip</Text>
               </View>
               <View className="flex-1 overflow-hidden mt-8">
                 <Swiper 

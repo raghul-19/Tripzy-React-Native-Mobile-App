@@ -15,6 +15,7 @@ const Verify = ({visible,onClose,handleOtpVerification,handleResendOtp}) => {
   const [time, setTime] = useState(120);
   const [editable,setEditable]=useState(true);
   const router=useRouter();
+  const [success,setSuccess]=useState(false);
 
   useEffect(() => {
     if(otp.trim() && otp.length===6) {
@@ -50,9 +51,8 @@ const Verify = ({visible,onClose,handleOtpVerification,handleResendOtp}) => {
     await new Promise(resolve => setTimeout(resolve,2000));
     try {
         await handleOtpVerification(otp);
-        router.push("/page/home")
-        onClose(false);
-
+        setError("");
+        router.replace("/auth/account-sync")
     } catch(error) {
         if(error.errors[0]) {
             setError(error.errors[0].message);

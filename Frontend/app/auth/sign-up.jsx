@@ -81,7 +81,9 @@ const SignUp = () => {
   const handleOtpVerification=async (code) => {
     const otpVerification=await signUp.attemptEmailAddressVerification({code});
     if(otpVerification.status==="complete") {
-      setActive({session:otpVerification.createdSessionId});
+      await setActive({session:otpVerification.createdSessionId});
+    } else {
+      throw new Error("Something went wrong and try again!");
     }
   }
 
@@ -96,9 +98,12 @@ const SignUp = () => {
       const {createdSessionId,setActive}=await startOAuthFlow({redirectUrl:Linking.createURL('auth/sign-up')});
       if(createdSessionId) {
         await setActive({session:createdSessionId});
-        
+        setError("");
+        router.replace("/auth/account-sync");
+      } else {
+        setError("Sign in with google failed and try again!");
       }
-      setError("");
+      
     } catch(error) {
         if(error.errors[0]) {
           setError(error.errors[0].message);

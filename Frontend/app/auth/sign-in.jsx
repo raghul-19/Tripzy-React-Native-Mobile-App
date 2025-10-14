@@ -60,7 +60,9 @@ const SignIn = () => {
                         await setActive({session:signInAttempt.createdSessionId});
                         setError("");
                         setLoginSuccess(true);
-                    } 
+                    } else {
+                        setError("Something went wrong and try again!");
+                    }
                 } catch(error) {
                     if(error.errors[0]) {
                         setError(error.errors[0].message);
@@ -79,10 +81,12 @@ const SignIn = () => {
                     const {createdSessionId,setActive}=await startOAuthFlow({redirectUrl:Linking.createURL("auth/sign-in")});
                     if(createdSessionId) {
                         await setActive({session:createdSessionId});
+                        setError("");
+                        setLoginSuccess(true);
+                    } else {
+                        setError("Something went wrong and try again!");
                     }
-                    setError("");
-                    await new Promise(resolve => setTimeout(resolve,1000));
-                    setLoginSuccess(true);
+
                 } catch(error) {
                     if(error.errors[0]) {
                         setError(error.errors[0].message);
@@ -168,7 +172,7 @@ const SignIn = () => {
                                         </Pressable>
                                         <View className="flex flex-row gap-1 w-full justify-center items-center mt-8">
                                             <Text className="text-xl font-medium text-gray-500 tracking-wide">{"Don't"} have an account?</Text>
-                                            <Text onPress={() => router.push("/auth/sign-up")} className="text-blue-500 active:opacity-65 text-lg font-semibold">Sign up</Text>
+                                            <Text onPress={() => router.push("/auth/account-sync")} className="text-blue-500 active:opacity-65 text-lg font-semibold">Sign up</Text>
                                         </View>
                                     </View>
                                 </KeyboardAwareScrollView>
@@ -181,7 +185,7 @@ const SignIn = () => {
                                 <Image source={require("../../assets/images/check.png")} style={{width:70, height:70}}/>
                                 <Text className="mt-8 font-semibold text-2xl tracking-wider">Verified!</Text>
                                 <Text className="text-center text-lg text-neutral-400 mt-4">{"You have successfully verified \nyour account"}</Text>
-                                <Pressable onPress={() => router.push("/page/home")} className="flex items-center justify-center bg-blue-500 mt-8 w-full py-4 rounded-full  active:opacity-70">
+                                <Pressable onPress={() => router.replace("/auth/account-sync")} className="flex items-center justify-center bg-blue-500 mt-8 w-full py-4 rounded-full  active:opacity-70">
                                     <Text className="text-md font-semibold text-white tracking-wider">Browse Home</Text>
                                 </Pressable>
                             </View>
