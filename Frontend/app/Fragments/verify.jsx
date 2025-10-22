@@ -1,11 +1,12 @@
 
+import { useUser } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import { LockKeyhole, ShieldAlert} from 'lucide-react-native'
-import React, { useEffect, useState } from 'react'
-import { Pressable, Text, TextInput, Modal, View,ActivityIndicator} from 'react-native'
-import {scale, verticalScale } from 'react-native-size-matters';
+import { LockKeyhole, ShieldAlert } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Modal, Pressable, Text, TextInput, View } from 'react-native';
+import { scale, verticalScale } from 'react-native-size-matters';
 
-const Verify = ({visible,onClose,handleOtpVerification,handleResendOtp}) => {
+const Verify = ({visible,onClose,handleOtpVerification,handleResendOtp,update,email}) => {
 
   const [otpFocus,setOtpFocus]=useState(false);
   const [otp,setOtp]=useState("");
@@ -15,7 +16,6 @@ const Verify = ({visible,onClose,handleOtpVerification,handleResendOtp}) => {
   const [time, setTime] = useState(120);
   const [editable,setEditable]=useState(true);
   const router=useRouter();
-  const [success,setSuccess]=useState(false);
 
   useEffect(() => {
     if(otp.trim() && otp.length===6) {
@@ -52,7 +52,11 @@ const Verify = ({visible,onClose,handleOtpVerification,handleResendOtp}) => {
     try {
         await handleOtpVerification(otp);
         setError("");
-        router.replace("/auth/account-sync")
+        if(!update) {
+          router.replace("/auth/account-sync")
+        } else {
+          onClose(false);
+        }
     } catch(error) {
         if(error.errors[0]) {
             setError(error.errors[0].message);

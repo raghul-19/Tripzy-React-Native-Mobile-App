@@ -16,7 +16,7 @@ const AuthenticationContext=({children}) => {
 
     useEffect(() => {
         const handleSessionAndTokenCheck=async () => {
-            await new Promise(resolve => setTimeout(resolve,2000));
+            await new Promise(resolve => setTimeout(resolve,1000));
             try {
                 if(!isSignedIn) {
                     throw new Error("Session Expired");

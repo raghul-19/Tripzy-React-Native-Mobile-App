@@ -205,7 +205,7 @@ const SignUp = () => {
         
       </SafeAreaView>
 
-      {signupSuccess && <Verify visible={signupSuccess} onClose={setSignupSuccess} handleOtpVerification={handleOtpVerification} handleResendOtp={handleResendOtp} isSignIn={false}/>}
+      {signupSuccess && <Verify visible={signupSuccess} onClose={setSignupSuccess} handleOtpVerification={handleOtpVerification} handleResendOtp={handleResendOtp}  update={false}/>}
 
     </View>
   )

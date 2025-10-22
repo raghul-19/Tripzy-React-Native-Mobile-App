@@ -5,7 +5,7 @@ import { Text, View } from 'react-native'
 import AuthenticationContext from '../Context/auth-context'
 import Layout from '../Fragments/layout'
 
-const Home = () => {
+const Chat = () => {
 
 
  
@@ -14,11 +14,11 @@ const Home = () => {
     <AuthenticationContext>
       <Layout>
         <View className="flex-1 justify-center items-center">
-          <Text className="text-blue-500 text-lg">Home Page</Text>
+          <Text className="text-blue-500 text-lg">Chat Page</Text>
         </View>
       </Layout>
     </AuthenticationContext>
   )
 }
 
-export default Home
+export default Chat

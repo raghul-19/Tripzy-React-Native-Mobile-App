@@ -14,5 +14,17 @@ export const apiCalls={
         headers: {
             "Content-Type":"application/json"
         }
+    }),
+
+    updateUserProfile:async (updatedData,token) => axios.put(`http://${NETWORK_IP_ADDRESS}:8080/user/updateProfile`,updatedData,{
+        headers:{
+            "Authorization":`Bearer ${token}`
+        }
+    }),
+
+    updateUserEmail:async (emailUpdateRequest,token) => axios.put(`http://${NETWORK_IP_ADDRESS}:8080/user/emailUpdate`,emailUpdateRequest,{
+        headers:{
+            "Authorization":`Bearer ${token}`
+        }
     })
 }
