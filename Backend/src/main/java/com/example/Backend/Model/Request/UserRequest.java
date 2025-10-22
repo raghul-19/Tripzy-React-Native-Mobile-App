@@ -16,4 +16,5 @@ public class UserRequest {
     private String fname;
     private String email;
     private String imgUrl;
+    private String userId;
 }

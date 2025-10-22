@@ -1,5 +1,6 @@
 package com.example.Backend.Controller;
 
+import com.example.Backend.Model.Request.EmailChangeRequest;
 import com.example.Backend.Model.Request.UserRequest;
 import com.example.Backend.Model.Response.UserResponse;
 import com.example.Backend.Service.Authentication.JwtTokenUtil;
@@ -36,9 +37,18 @@ public class AuthController {
         System.out.println("token: "+(token!=null?token:"null"));
         try {
             Map<String,Object> claims=jwtTokenUtil.extractTokenClaims(token);
+            String userId=(String) claims.get("sub");
             String email=(String) claims.get("email");
-            UserResponse user=userService.getUserByEmail(email);
+            UserResponse user=userService.getUserByUserId(userId);
             if(user!=null) {
+                if(!user.getEmail().equals(email)) {
+                    UserResponse updatedUser=userService.updateUserEmail(EmailChangeRequest
+                            .builder()
+                            .userId(userId)
+                            .newEmail(email)
+                            .build());
+                    return ResponseEntity.ok().body(updatedUser);
+                }
                 return ResponseEntity.ok().body(user);
             }
             String imgUrl=(String) claims.get("image_url");
@@ -47,6 +57,7 @@ public class AuthController {
                     .email(email)
                     .imgUrl(imgUrl)
                     .fname(name)
+                    .userId(userId)
                     .build();
             UserResponse createdUser=userService.createUser(request);
             return ResponseEntity.ok().body(createdUser);

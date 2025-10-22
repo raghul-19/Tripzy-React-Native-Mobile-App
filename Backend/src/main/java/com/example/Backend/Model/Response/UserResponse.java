@@ -1,5 +1,6 @@
 package com.example.Backend.Model.Response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +19,7 @@ public class UserResponse {
     private String lname;
     private String email;
     private boolean status;
+    @JsonProperty("pNumber")
     private String pNumber;
     private String encodedImage;
     private String imageType;

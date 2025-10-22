@@ -1,6 +1,8 @@
 package com.example.Backend.Service.Implementation;
 
 import com.example.Backend.Entity.User;
+import com.example.Backend.Model.Request.EmailChangeRequest;
+import com.example.Backend.Model.Request.UserProfileChangeRequest;
 import com.example.Backend.Model.Request.UserRequest;
 import com.example.Backend.Model.Response.UserResponse;
 import com.example.Backend.Repository.UserRepository;
@@ -41,7 +43,7 @@ public class UserServiceImpl implements UserService {
             imageType=generateImageTypeFromUrl(request.getImgUrl());
         }
         return User.builder()
-                .userId("Uber_User_"+ UUID.randomUUID().toString()+System.currentTimeMillis())
+                .userId(request.getUserId())
                 .fname(request.getFname())
                 .email(request.getEmail())
                 .imageBytes(imgBytes)
@@ -61,6 +63,7 @@ public class UserServiceImpl implements UserService {
                 .pNumber(user.getPNumber())
                 .encodedImage(encodedImage)
                 .imageType(user.getImageType())
+                .status(user.isStatus())
                 .build();
     }
 
@@ -70,9 +73,36 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse getUserByEmail(String email) {
-        User user=userRepository.findByEmail(email);
+    public UserResponse getUserByUserId(String userId) {
+        User user=userRepository.findByUserId(userId);
         return user==null?null:generateUserResponse(user);
+    }
+
+    @Override
+    public UserResponse updateUserProfile(UserProfileChangeRequest request) {
+        User user=userRepository.findByUserId(request.getUserId());
+        if(user!=null) {
+            if(request.getEncodedImage()!=null) {
+                byte[] imgBytes=Base64.getDecoder().decode(request.getEncodedImage());
+                user.setImageBytes(imgBytes);
+                user.setImageType(request.getImageType());
+            }
+            user.setFname(request.getFname());
+            user.setLname(request.getLname());
+            user.setPNumber(request.getPNumber());
+            return generateUserResponse(userRepository.save(user));
+        }
+        return null;
+    }
+
+    @Override
+    public UserResponse updateUserEmail(EmailChangeRequest request) {
+        User user=userRepository.findByUserId(request.getUserId());
+        if(user!=null) {
+            user.setEmail(request.getNewEmail());
+            return generateUserResponse(userRepository.save(user));
+        }
+        return null;
     }
 
 }
