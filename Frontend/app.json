@@ -49,6 +49,15 @@
       "eas": {
         "projectId": "b5f4ef60-c9fc-47de-8664-4520cc2914a1"
       }
+    },
+    "build": {
+      "development": {
+        "node": "18.x",
+        "env": {
+          "EXPO_NODE_FLAGS": "--legacy-peer-deps"
+        },
+        "cli": "npm ci --legacy-peer-deps"
+      }
     }
   }
 }

@@ -11,6 +11,7 @@ import AuthenticationContext from '../Context/auth-context'
 import Layout from '../Fragments/layout'
 import { apiCalls } from '../utils/apiCalls'
 import Verify from '../Fragments/verify'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 const Profile = () => {
 
@@ -80,6 +81,7 @@ const Profile = () => {
             setStatusPending(false);
             setLoading(prev => ({...prev,email:false}));
             setEdit(prev => ({...prev,email:false}));
+            return;
             
         }
         if(emailAddress && emailAddress.verification.status==='unverified') {
@@ -189,7 +191,8 @@ const Profile = () => {
   return (
     <AuthenticationContext>
       <Layout>
-        <View className="flex-1 px-5 pt-3 pb-2">
+        <KeyboardAwareScrollView  style={{flex:1}} contentContainerStyle={{flexGrow:1}} showsVerticalScrollIndicator={false} enableOnAndroid={true}>
+        <View className="flex-1 pt-3 pb-2">
             <Text style={{fontSize:25}} className="font-bold tracking-widest mt-3">Your profile</Text>
             <View className="w-full flex items-center mt-6">
                 <View className="relative w-fit h-fit">
@@ -331,7 +334,7 @@ const Profile = () => {
                 }
             </View>
         </View>
-        
+        </KeyboardAwareScrollView>
       </Layout>
       {verify && <Verify visible={verify} onClose={setVerify} handleOtpVerification={handleEmailVerification} handleResendOtp={handleResendOtp} update={true} email={userData.email}/>}
     </AuthenticationContext>

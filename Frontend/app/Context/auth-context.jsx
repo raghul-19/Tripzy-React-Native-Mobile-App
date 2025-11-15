@@ -25,7 +25,7 @@ const AuthenticationContext=({children}) => {
                 await apiCalls.verifyJWTTokenValidity({token});
             } catch(error) {
                 console.log(error.message);
-                if(isSignedIn) {await signOut();}
+                await signOut();
                 router.replace("/auth/sign-in");
             }
             setLoading(false);
