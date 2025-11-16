@@ -23,7 +23,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "resizeMode": "cover",
+        "resizeMode": "contain",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
