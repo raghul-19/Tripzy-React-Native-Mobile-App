@@ -1,6 +1,6 @@
 
 import React, { useEffect,useState } from 'react'
-import { Alert, AppState, FlatList, Image, Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { Alert, AppState, Image, Keyboard, Linking, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import AuthenticationContext from '../Context/auth-context'
 import Layout from '../Fragments/layout'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -9,26 +9,64 @@ import { scale, verticalScale } from 'react-native-size-matters'
 import * as Location from 'expo-location'
 import * as IntentLauncher from 'expo-intent-launcher'
 import {ChevronRight} from 'lucide-react-native'
-import MapView, {Marker, PROVIDER_DEFAULT} from 'react-native-maps'
-
+import RideLayout from '../Fragments/ride-layout'
+import { useRouter } from 'expo-router'
+import MapComponent from '../Fragments/map-view'
+import PlaceList from '../Fragments/place-list'
+import { coordinatesToName, nameToCoordinates } from '../utils/helpers'
+import { useAuth } from '@clerk/clerk-expo'
+import { apiCalls } from '../utils/apiCalls'
 
 const Home = () => {
 
   const [userData,setUserData]=useState({});
   const [location,setLocation]=useState("");
-  const [places,setPlaces]=useState([]);
+  const router=useRouter();
   const [locationPermission,setLocationPermission]=useState(false);
   const [userLocation,setUserLocation]=useState({
     latitude:null,
     longitude:null
-  });
-
-  const defaultCoordinates={
-    latitude: 37.78825,
-    longitude: -122.4324,
-  }
-
+  });  
+  const {getToken,signOut}=useAuth();
+  const [recentRide,setRecentRide]=useState({});
+  const [selectedDestinaton,setSelectedDestination]=useState("");
   const [enableLocationSuggestion,setEnableLocationSuggestion]=useState(true);
+
+
+  useEffect(() => {
+    if(!selectedDestinaton.trim()) return;
+    const handleFinalStepsToRideFlow=async () => {
+      const destinationCoordinates=await nameToCoordinates(selectedDestinaton);
+      const sourceLocationName=(userLocation.latitude && userLocation.longitude)?await coordinatesToName(userLocation):"";
+      const source={name:sourceLocationName,coords:userLocation};
+      const destination={name:selectedDestinaton,coords:destinationCoordinates};
+      router.push({
+        pathname:"/ride-flow/destination",
+        params:{
+          source:JSON.stringify(source),
+          destination:JSON.stringify(destination)
+        }
+      })
+      setLocation("");
+      return;
+    }
+    handleFinalStepsToRideFlow();
+  },[selectedDestinaton])
+
+  useEffect(() => {
+    const handleFetchRecentRide=async () => {
+      try {
+        const {email}=JSON.parse(await AsyncStorage.getItem("user"));
+        const token=await getToken({template:"id_token"});
+        const response=await apiCalls.getRecentRideData(email,token);
+        console.log(response.data);
+        setRecentRide(response.data);
+      } catch(err) {
+        console.log(err.message);
+      }
+    }
+    handleFetchRecentRide();
+  },[])
 
   useEffect(() => {
     const handleUserLocation=async () => {
@@ -77,6 +115,26 @@ const Home = () => {
   },[])
 
   useEffect(() => {
+    let trackUserLocation;
+    (async () => {
+      trackUserLocation=await Location.watchPositionAsync(
+        {
+          accuracy:Location.Accuracy.Highest,
+          timeInterval:5000,
+          distanceInterval:1000,
+        },
+        (location) => {
+          setUserLocation({
+            latitude:location.coords.latitude,
+            longitude:location.coords.longitude
+          })
+        }
+      );
+    })();
+    return () => trackUserLocation && trackUserLocation.remove();
+  },[])
+
+  useEffect(() => {
     const handleUserDataFetch=async () => {
       try {
         const user=await AsyncStorage.getItem("user");
@@ -93,34 +151,6 @@ const Home = () => {
     handleUserDataFetch();
   },[])
 
-  useEffect(() => {
-    if(location==="") {
-      setPlaces([]);
-      return;
-    };
-    const handleFetchLocation=async () => {
-      const apiKey=process.env.EXPO_PUBLIC_GOOGLE_MAP_API_KEY;
-      let url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${location}&key=${apiKey}`;
-      if(userLocation.latitude && userLocation.longitude) {
-        url = url + `&location=${userLocation.latitude},${userLocation.longitude}&radius=50000`;
-      }
-      try {
-        const response=await fetch(url);
-        const result=await response.json();
-        if(result.status==="OK") {
-          setPlaces(result.predictions);
-          console.log(result.predictions);
-        } else {
-          console.log("there is something went wrong");
-        }
-      } catch(error) {
-        console.log(error.message);
-        console.error("Something went wrong");
-      }
-
-    }
-    handleFetchLocation();
-  },[location])
 
   useEffect(() => {
     const trackAppState=AppState.addEventListener('change',(nextAppState) => {
@@ -131,18 +161,28 @@ const Home = () => {
     return () => trackAppState.remove();
   })
 
+
   useEffect(() => {
     const trackLocationStatus=async () => {
       const locationEnabled=await Location.hasServicesEnabledAsync();
-      if(locationEnabled) {
+      if(!locationEnabled) {
+        setUserLocation(
+          {
+            latitude:null,
+            longitude:null
+          }
+        )
+        return;
+      }
+
+      if(userLocation.latitude===null && userLocation.longitude===null) {
         const pos=await Location.getCurrentPositionAsync({accuracy:Location.Accuracy.High});
         setUserLocation({
           latitude:pos.coords.latitude,
-          longitude:pos.coords.longitude
+          longitude:pos.coords.longitude,
         })
       }
     }
-
     const timeInterval=setInterval(trackLocationStatus,3000);
     return () => clearInterval(timeInterval);
   })
@@ -151,7 +191,7 @@ const Home = () => {
     const {status}=await Location.getForegroundPermissionsAsync();
     if(status==='granted') {
       setLocationPermission(true);
-      checkForLocation();
+      if(userLocation.latitude===null){checkForLocation();}
     }
   }
 
@@ -191,98 +231,19 @@ const Home = () => {
       )
     }
   }
+  const handleLogOut=async () => {
+    await signOut();
+    router.replace("/auth/sign-in");
+  }
 
-  const customMapStyle = [
-    // Hide most icons (shops, parks etc)
-    {
-      featureType: "poi",
-      elementType: "labels.icon",
-      stylers: [{ visibility: "off" }]
-    },
-    {
-      featureType: "transit",
-      elementType: "labels.icon",
-      stylers: [{ visibility: "off" }]
-    },
-    {
-      featureType: "road",
-      elementType: "labels.icon",
-      stylers: [{ visibility: "off" }]
-    },
-  
-    // Land/background — very pale blue
-    {
-      featureType: "landscape",
-      elementType: "geometry",
-      stylers: [{ color: "#f4faff" }]
-    },
-  
-    // Buildings/Business POIs — subtle blue
-    {
-      featureType: "poi.business",
-      elementType: "geometry",
-      stylers: [{ color: "#e3f0ff" }]
-    },
-  
-    // Water
-    {
-      featureType: "water",
-      elementType: "geometry",
-      stylers: [{ color: "#cce6ff" }]
-    },
-  
-    // Roads — white and clean
-    {
-      featureType: "road",
-      elementType: "geometry",
-      stylers: [{ color: "#ffffff" }]
-    },
-  
-    // Minor roads — white as well
-    {
-      featureType: "road.local",
-      elementType: "geometry",
-      stylers: [{ color: "#ffffff" }]
-    },
-  
-    // Road labels (street names) — medium gray
-    {
-      featureType: "road",
-      elementType: "labels.text.fill",
-      stylers: [{ color: "#7a7a7a" }]
-    },
-  
-    // Remove administrative/political noise
-    {
-      featureType: "administrative",
-      elementType: "geometry",
-      stylers: [{ visibility: "off" }]
-    },
-  
-    // Parks — no green, subtle fill
-    {
-      featureType: "poi.park",
-      elementType: "geometry",
-      stylers: [{ color: "#eaf6ff" }]
-    },
-  
-    // Shop/Place Names — darker gray for readability
-    {
-      featureType: "poi",
-      elementType: "labels.text.fill",
-      stylers: [{ color: "#686868" }, { visibility: "on" }]
-    }
-  ];
-  
-
-  return (
+   return (
     <AuthenticationContext>
       <Layout>
-       <ScrollView style={{flex:1}} contentContainerStyle={{flexGrow:1}} showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
-        <View className="flex-1 pt-5 pb-2">
+       <ScrollView style={{flex:1}}  contentContainerStyle={{flexGrow:1,paddingBottom:100}} showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
+        <View className="flex-1 pt-5 pb-2 relative">
           <View className="flex flex-row gap-2 justify-between items-center">
             <Text className="flex-1 font-semibold tracking-wide" style={{fontSize:22}}  numberOfLines={1}>Welcome {`${userData.fname}`}</Text>
-            <Pressable className="active:opacity-45 flex justify-center items-center" style={{width:40,height:40,borderRadius:20, backgroundColor:"white"}}>
+            <Pressable onPress={handleLogOut} className="active:opacity-45 flex justify-center items-center" style={{width:40,height:40,borderRadius:20, backgroundColor:"white"}}>
               <Image source={require("../../assets/icons/out.png")} resizeMode='contain' style={{width:20,height:20}}/>
             </Pressable>
           </View>
@@ -292,53 +253,22 @@ const Home = () => {
               <Image source={require("../../assets/icons/search.png")} resizeMode="contain" style={{width:25,height:25}} />
               <TextInput value={location} onChangeText={(text) => setLocation(text)} className={`flex-1  text-lg ${location?"font-medium":"font-light tracking-wider"}`} placeholder='Where do you want to go?' placeholderTextColor="#aaa"/>
             </Pressable>
-            {places.length!==0 &&
-              <View  style={{width:"100%",height:"auto",position:"absolute",zIndex:999,top:75,backgroundColor:"white"}}>
-              <FlatList
-                keyboardShouldPersistTaps='handled'
-                className="border-b border-white"
-                data={places.filter(item => item && item.description && item.place_id)}
-                scrollEnabled={false}
-                showsVerticalScrollIndicator={false}
-                renderItem={({item,index}) => {
-                  const lastSuggestion=index===places.length-1;
-                  return(
-                  <Pressable  className={`bg-white active:opacity-45 rounded-full ${!lastSuggestion?"border-b-2 border-gray-200":"border-b-0"}`} style={{paddingHorizontal:scale(10),paddingVertical:verticalScale(12)}}>
-                    <Text className="text-md font-medium flex-1" numberOfLines={1}>{item.description}</Text>
-                  </Pressable>
-                )}}
-              />
-              </View>
+            {location.length!==0 && 
+              <PlaceList closeKeyboard={() => Keyboard.dismiss()} location={location} userLocation={userLocation} setSelectedPlaces={(selectedDestinaton) => setSelectedDestination(selectedDestinaton)}/>
             }
           </View>
 
           <Text className="mt-6 font-bold text-xl tracking-wide">Your current location</Text>
-          <View className="mt-5 bg-white rounded-2xl" style={{width:"100%",height:300}}>
-            <MapView 
-              customMapStyle={customMapStyle}
-              style={{width:"100%", height:"100%",borderRadius:10}}
-              region={
-                userLocation ?
-                  {
-                    ...userLocation,
-                    latitudeDelta:0.004,
-                    longitudeDelta:0.004,
-                  }
-                :
-                  {
-                    ...defaultCoordinates,
-                    latitudeDelta:0.01,
-                    longitudeDelta:0.01,
-                  }
-              }
-            >
-              <Marker coordinate={userLocation} pinColor="blue"></Marker>
+          <View className="mt-5 bg-white rounded-xl overflow-hidden" style={{width:"100%",height:300}}>
+            
+              <MapComponent userCoordinates={userLocation}/>
 
-            </MapView>
           </View>
 
-          {(enableLocationSuggestion &&  userLocation.latitude===null) && 
+          
           <View className="mt-10 relative">
+            {enableLocationSuggestion && userLocation.latitude===null && 
+            <>
             <View className="w-full rounded-lg bg-neutral-900" style={{position:"relative",paddingHorizontal:scale(15),paddingVertical:verticalScale(15)}}>
               <Text className="text-white font-medium text-sm tracking-wide">{(!locationPermission)?"Please grant location acccess permission for":"Please turn on or update your location for"}</Text>
               <Text className="text-white font-medium text-sm tracking-wide mt-1">accessing services around you.</Text>
@@ -354,8 +284,18 @@ const Home = () => {
                 </Pressable>
               </View>
             </View>
-            <View className="absolute w-[16px] h-[16px] bg-neutral-900 rotate-45 -top-2 right-4" style={{zIndex:200}}/>
-          </View>}
+            <View className="absolute w-[16px] h-[16px] bg-neutral-900 rotate-45 -top-2 right-4"/>
+            </>}
+            <Text className="mt-5 font-bold tracking-wide" style={{fontSize:18}}>Recent Rides</Text>
+            <View className="mt-5">
+              {recentRide?.name?<RideLayout ride={recentRide}/>:
+                <View className="flex items-center">
+                  <Image source={require("../../assets/images/no-result.png")} style={{width:200,height:200}}/>
+                  <Text className="text-xl font-semibold ">No result found</Text>
+                </View>
+              }
+            </View>
+          </View>
         </View>
         </ScrollView>
       </Layout>

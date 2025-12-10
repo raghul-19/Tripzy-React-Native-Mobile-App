@@ -1,3 +1,4 @@
+
 require('dotenv').config();
 console.log("MAP KEY =", process.env.GOOGLE_MAPS_API_KEY);
 
@@ -46,11 +47,15 @@ export default ({ config }) => ({
     favicon: "./assets/images/favicon.png",
     bundler: "metro",
   },
-  plugins: [
-    "expo-router",
-    "./plugins/withAndroidTransparentSystemBars.js",
-    "expo-web-browser",
-  ],
+  "plugins": [
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.anonymous.tripzy",
+          "enableGooglePay": true
+        }
+      ]
+    ],
   experiments: {
     typedRoutes: true,
     reactCompiler: true,
@@ -62,4 +67,3 @@ export default ({ config }) => ({
     },
   },
 });
-

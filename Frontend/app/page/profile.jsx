@@ -191,7 +191,7 @@ const Profile = () => {
   return (
     <AuthenticationContext>
       <Layout>
-        <KeyboardAwareScrollView  style={{flex:1}} contentContainerStyle={{flexGrow:1}} showsVerticalScrollIndicator={false} enableOnAndroid={true}>
+        <KeyboardAwareScrollView  style={{flex:1}} contentContainerStyle={{flexGrow:1}} keyboardShouldPersistTaps="handled" extraScrollHeight={220}   showsVerticalScrollIndicator={false} enableOnAndroid={true}>
         <View className="flex-1 pt-3 pb-2">
             <Text style={{fontSize:25}} className="font-bold tracking-widest mt-3">Your profile</Text>
             <View className="w-full flex items-center mt-6">

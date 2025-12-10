@@ -45,8 +45,8 @@ const AuthenticationContext=({children}) => {
                     loop
                     speed={3}
                     style={{
-                        width: width * 0.5,   // 50% of screen width
-                        height: width * 0.5,  // keep square
+                        width: width * 0.5,  
+                        height: width * 0.5,  
                     }}
               
                 />

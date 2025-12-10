@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const NETWORK_IP_ADDRESS="192.168.1.2";
+const NETWORK_IP_ADDRESS="192.168.1.4";
 
 export const apiCalls={
 
@@ -26,5 +26,29 @@ export const apiCalls={
         headers:{
             "Authorization":`Bearer ${token}`
         }
+    }),
+    getClientPaymentSecret:async (paymentData,token) => axios.post(`http://${NETWORK_IP_ADDRESS}:8080/stripe/getClientSecret`,paymentData,{
+        headers:{
+            "Authorization":`Bearer ${token}`
+        }
+    }),
+
+    registerRideDetails:async (rideDetails,token) => axios.post(`http://${NETWORK_IP_ADDRESS}:8080/ride/create`,rideDetails,{
+        headers:{
+            "Authorization":`Bearer ${token}`
+        }
+    }),
+
+    getAllRideHistory: async (email,token) => axios.get(`http://${NETWORK_IP_ADDRESS}:8080/ride?email=${email}`,{
+        headers:{
+            "Authorization":`Bearer ${token}`
+        }
+    }),
+
+    getRecentRideData: async (email,token) => axios.get(`http://${NETWORK_IP_ADDRESS}:8080/ride/recent?email=${email}`,{
+        headers:{
+            "Authorization":`Bearer ${token}`
+        }
     })
+
 }

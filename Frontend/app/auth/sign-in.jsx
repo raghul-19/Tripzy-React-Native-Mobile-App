@@ -120,7 +120,7 @@ const SignIn = () => {
                                     <View className="flex-1">
                                         <Text className="font-semibold text-xl">Email</Text>
                                         <TouchableOpacity  onPress={() => emailRef.current?.focus()} className={`mt-2 border-2 w-full gap-2  rounded-full flex flex-row justify-start items-center outline-none ${focusField.email?" border-blue-500":"border-transparent"}`}   style={{ backgroundColor: 'rgba(227, 242, 253, 0.2)', paddingHorizontal: scale(19), paddingVertical:verticalScale(4)}}>
-                                            <Mail size={20} strokeWidth={2} strokeOpaci ty={0.5}/>
+                                            <Mail size={20} strokeWidth={2} strokeOpacity={0.5}/>
                                             <TextInput
                                                 ref={emailRef}
                                                 onFocus={prev=> setFocusField({...prev,email:true})}
@@ -179,7 +179,7 @@ const SignIn = () => {
                             </View>
                           
                     </SafeAreaView>
-                    <Modal visible={loginSuccess} animationType='slide' transparent>
+                    <Modal visible={loginSuccess}  animationType='slide' transparent>
                         <View className="flex-1 justify-center bg-black/40 items-center px-3">
                             <View className="w-full flex items-center rounded-2xl py-10 px-4 bg-white">
                                 <Image source={require("../../assets/images/check.png")} style={{width:70, height:70}}/>
